@@ -5,8 +5,12 @@ class Cleaner
 
   attr_reader :connection
 
+  def self.conn
+    @conn ||= Sequel.connect(DATABASE_URL)
+  end
+
   def initialize
-    @connection = Sequel.connect(DATABASE_URL)
+    @connection = self.class.conn
   end
 
   def setup

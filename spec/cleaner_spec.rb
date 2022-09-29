@@ -5,34 +5,44 @@ cleaner = Cleaner.new
 cleaner.setup
 
 RSpec.configure do |config|
+  config.before(:suite) do
+    DatabaseCleaner.clean_with(:deletion)
+  end
+
   config.around(:each) do |example|
     conn = DatabaseCleaner[:sequel]
     conn.db = cleaner.connection
     conn.strategy = :transaction
 
-    conn.start
-    example.run
-    conn.clean
+    conn.cleaning do
+      example.run
+    end
   end
 end
 
 RSpec.describe Cleaner do
-  let(:instance) { described_class.new }
-  let(:users) { instance.connection[:users] }
+  describe '' do
+    let(:instance) { described_class.new }
+    let(:users) { instance.connection[:users] }
 
-  context '' do
-    before do
-      users.insert(id: 1)
+    before(:all) do
+      described_class.new.connection[:users].insert(id: 100)
     end
 
-    it { puts "User count: #{instance.count}" }
-  end
+    context '' do
+      before do
+        users.insert(id: 1)
+      end
 
-  context '' do
-    before do
-      users.insert(id: 2)
+      it { puts "User count: #{instance.count}" }
     end
 
-    it { puts "User count: #{instance.count}" }
+    context '' do
+      before do
+        users.insert(id: 2)
+      end
+
+      it { puts "User count: #{instance.count}" }
+    end
   end
 end
